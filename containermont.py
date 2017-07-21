@@ -15,7 +15,7 @@ def display_cpu(args):
     if bool(detail["State"]["Running"]):
         container_id = detail['Id']
         cpu_usage = {}
-        with open('/sys/fs/cgroup/cpuacct/docker/' + container_id + '/cpuacct.stat', 'r') as f:
+        with open('/sys/fs/cgroup/cpuacct/cpuacct.stat', 'r') as f:
             for line in f:
                 m = re.search(r"(system|user)\s+(\d+)", line)
                 if m:
@@ -39,7 +39,7 @@ def display_memory(args):
     detail = c.inspect_container(args.container)
     if bool(detail["State"]["Running"]):
         container_id = detail['Id']
-        with open('/sys/fs/cgroup/memory/docker/' + container_id + '/memory.stat', 'r') as f:
+        with open('/sys/fs/cgroup/memory/memory.stat', 'r') as f:
             for line in f:
                 m = re.search(r"total_rss\s+(\d+)", line)
                 if m:
@@ -52,12 +52,12 @@ def display_memory(args):
 def display_network(args):
     detail = c.inspect_container(args.container)
     if bool(detail["State"]["Running"]):
-        ifconfig = c.execute(args.container, "ifconfig eth0")
+        ifconfig = c.execute(args.container, "ifconfig docker0")
         m = re.search(("RX" if args.direction == "in" else "TX") + r" bytes:(\d+)", str(ifconfig))
         if m:
             print(m.group(1))
         else:
-            b = c.execute(args.container, "cat /sys/devices/virtual/net/eth0/statistics/"+("rx" if args.direction == "in" else "tx")+"_bytes").decode()
+            b = c.execute(args.container, "cat /sys/devices/virtual/net/docker0/statistics/"+("rx" if args.direction == "in" else "tx")+"_bytes").decode()
             if re.match(r"\s*\d+\s*", b):
                 print(b)
             else:
